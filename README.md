@@ -2,182 +2,115 @@
 
 UI tests for [saucedemo.com](https://www.saucedemo.com) and API tests for [reqres.in](https://reqres.in), in one Playwright project.
 
-## Quick start
+## Install and run
 
 Requires Node.js 18 or newer.
 
 ```bash
-git clone <this-repo-url>
-cd recruiterflow-qa-assignment
 npm install
-npm test
+npx playwright test
 ```
 
-`npm install` also downloads Chromium (via `postinstall`), so nothing else needs to be set up. No `.env` file is required — every setting has a working default.
-
-## Commands
+`npm install` also downloads Chromium. No `.env` file is needed; every setting has a default.
 
 | Command | What it does |
 |---|---|
-| `npm test` | Run the whole suite (UI + API) |
-| `npm run test:ui` | Run only the UI tests |
-| `npm run test:api` | Run only the API tests |
-| `npm run test:evidence` | Run everything with a screenshot and video for every UI test |
-| `npm run test:headed` | Run UI tests with the browser visible |
-| `npm run test:watch` | Run UI tests visible, one at a time, slowed down so each action can be followed |
-| `npm run test:debug` | Run with the Playwright inspector |
-| `npm run report` | Open the HTML report from the last run |
-| `npm run typecheck` | Type-check the whole project |
+| `npx playwright test` or `npm test` | Run everything (UI + API) |
+| `npm run test:ui` / `npm run test:api` | Run one part only |
+| `npm run test:watch` | UI tests in a visible browser, one at a time, slowed down |
+| `npm run test:evidence` | Run with a screenshot and video for every UI test |
+| `npm run report` | Open the HTML report of the last run |
+| `npm run typecheck` | Type-check the project |
 
-## Report and evidence
+## What is covered
 
-After a run, `npm run report` opens the HTML report. Evidence is controlled by the `EVIDENCE` setting:
-
-| `EVIDENCE` | Screenshot | Video | Trace | Used by |
-|---|---|---|---|---|
-| `failure` (default) | on failure | off | on failure | `npm test` |
-| `full` | every test | every test | on failure | `npm run test:evidence` |
-| `off` | off | off | off | fastest local runs |
-
-In every mode the report also shows:
-
-- **BDD steps**: each `Given / When / Then` as its own step, with timing
-- **API exchanges**: every request and response (method, path, params, body, status, duration, attempts) attached as JSON
-- **Scenario data**: the products, customer or payload a test generated, attached as JSON
-
-Raw files are written to `test-results/`.
-
-## Scenario coverage
-
-| # | Scenario | Spec |
+| # | Scenario from the brief | Test |
 |---|---|---|
 | 1 | Standard user logs in and lands on the products page | `tests/ui/login.spec.ts` |
 | 2 | Locked-out user sees the error and is not logged in | `tests/ui/login.spec.ts` |
 | 3 | Add two products, cart badge shows 2 | `tests/ui/cart.spec.ts` |
-| 4 | Full checkout ends with "Thank you for your order!" | `tests/ui/checkout.spec.ts` |
+| 4 | Checkout ends with "Thank you for your order!" | `tests/ui/checkout.spec.ts` |
 | 5 | Sort by price (low to high), first product is the cheapest | `tests/ui/sorting.spec.ts` |
-| 6 | `GET /api/users?page=2` — 200, `data` array, required fields | `tests/api/users.spec.ts` |
-| 7 | `POST /api/users` — 201, echoes name/job, has id and createdAt | `tests/api/users.spec.ts` |
+| 6 | `GET /api/users?page=2`: 200, `data` array, required user fields | `tests/api/users.spec.ts` |
+| 7 | `POST /api/users`: 201, echoes name and job, has id and createdAt | `tests/api/users.spec.ts` |
 | 8 | Bonus: create-then-verify flow | `tests/api/users.spec.ts` |
 
-Extra: `sorting.spec.ts` also checks the full order for all four sort options (data-driven), and the checkout test verifies the cart contents and the item total before finishing.
+A few small extra checks, each its own test:
+- the cart page lists exactly the added products
+- the checkout overview shows those products and the correct item total
+- the cart is emptied after the order
+- all four sort options produce a fully ordered list
 
 ## Project structure
 
 ```
-├── playwright.config.ts        Two projects: "ui" (browser) and "api" (no browser)
-├── src/
-│   ├── config/
-│   │   ├── GlobalConfig.ts     Single config class: environment, URLs, run mode, evidence, timeouts
-│   │   └── environments.ts     One profile per environment (URLs, key, password)
-│   ├── core/                   Shared, framework-level helpers
-│   │   ├── bdd.ts              Given / When / Then / And → test.step
-│   │   ├── ScenarioContext.ts  Typed set/get store for passing data between steps
-│   │   ├── DataFactory.ts      Random test data and random sampling
-│   │   ├── locators.ts         resilient(): primary locator with fallbacks
-│   │   ├── perform.ts          Wraps an action and rethrows with context
-│   │   ├── retry.ts            Retry with exponential backoff
-│   │   ├── errors.ts           ActionError
-│   │   └── evidence.ts         Attach JSON to the report
-│   ├── ui/
-│   │   ├── pages/              Page objects (BasePage → SecurePage → concrete pages)
-│   │   ├── components/         Header (cart badge/link), ProductList (shared product rows)
-│   │   ├── models/             Product, Customer, UserCredentials (get/set classes)
-│   │   ├── data/               Users, expected messages, page titles, sort options
-│   │   └── utils/price.ts      Price parsing and summing
-│   ├── api/
-│   │   ├── core/               BaseApiClient, ApiError, request/response types
-│   │   ├── clients/            UsersClient
-│   │   ├── endpoints.ts        All API paths in one place
-│   │   ├── types/              Response and request types
-│   │   ├── models/             CreatedUser (get/set class)
-│   │   ├── data/               Request payloads (fixed and generated)
-│   │   └── assertions/         Reusable API assertions
-│   └── fixtures/               test.extend: injects pages, clients, loginAs and contexts
-└── tests/
-    ├── ui/                     login, cart, checkout, sorting
-    └── api/                    users
+├── tests/
+│   ├── ui/            login, cart, checkout, sorting
+│   └── api/           users
+├── pages/             Page objects: BasePage → SecurePage → one class per page
+├── components/        Header (cart badge and link), ProductList (product rows shared by 3 pages)
+├── fixtures/          Injects page objects, API client, loginAs, addToCart and scenario context into tests
+├── api/               BaseApiClient, UsersClient, endpoints, response types, reusable assertions
+├── models/            Product, Customer, UserCredentials, CreatedUser
+├── test-data/         Users, product names, expected messages, sort options, API payloads
+├── config/            GlobalConfig and environment profiles
+├── core/              BDD step helpers, ScenarioContext, retry, error wrapping, test-data generator
+├── utils/             Price parsing
+└── playwright.config.ts   Two projects: "ui" (Chromium) and "api" (no browser)
 ```
 
-## Design decisions
+## How the suite is built
 
-**Built on Playwright's own features.** Waiting, retrying assertions, screenshots, video, traces, reporting and HTTP calls all come from Playwright. The framework only adds structure on top.
+**Page objects and fixtures.** Tests never construct page objects. They ask for `loginPage`, `productsPage`, `cartPage` and so on, and the fixtures in `fixtures/` provide them.
+- `BasePage` checks the URL and a landmark element.
+- `SecurePage` adds the shared header and the title check for logged-in pages.
+- `loginAs(user)` and `addToCart(names)` remove repeated setup steps.
 
-**Page Object Model + fixtures.** Tests never create page objects themselves. Fixtures in `src/fixtures` inject them, so a test just asks for `loginPage` or `cartPage`. Adding a new page means one class plus one line in `ui.fixtures.ts`. The `loginAs(user)` fixture removes the repeated login steps.
+**Locators.**
+- `getByTestId` for saucedemo's `data-test` attributes (enabled with `testIdAttribute: 'data-test'`).
+- `getByRole` for buttons, by their visible name (Login, Checkout, Continue, Finish, Add to cart).
+- No CSS or XPath selectors.
 
-**Page hierarchy.**
-- `BasePage` holds the page path, `open()`, `expectLoaded()` (checks the URL and a landmark element) and error wrapping.
-- `SecurePage` adds the shared header and the page-title check for every logged-in page.
-- Each concrete page only declares its own locators and actions.
+**Assertions.** Each test checks one behaviour, using web-first assertions (`toHaveText`, `toHaveURL`, `toHaveCount`, `expect.poll`) so they wait instead of racing the page.
+- **Expected values are calculated from the page, not hard-coded:** the lowest listed price, the sum of the selected products' prices, the sorted order.
+- **Assertions carry messages**, so a failure says what was expected.
 
-**Locators.** They're based on saucedemo's `data-test` attributes, via `testIdAttribute: 'data-test'` and `getByTestId`. Each important locator is built with `resilient(primary, ...fallbacks)`, which uses Playwright's `locator.or()`:
-- if the test id is renamed, the role, placeholder or text fallback still finds the element
-- CSS class fallbacks are used only as a last resort
+**Independent tests.** Every test logs in and builds its own state. The suite runs fully in parallel and in any order.
 
-**Dynamic, not hard-coded.**
-- Products for the cart and checkout tests are picked at random from the live list.
-- Checkout customer details and API payloads are generated.
-- Assertions are calculated from real data, never fixed values: the lowest price, the sum of the selected prices, the expected sort order.
-- The generated data is attached to the report, so any failure can be reproduced.
+**API tests** use Playwright's `request` fixture only, through a small `UsersClient`. Paths live in `api/endpoints.ts`, response shapes in `api/types/`, and shared checks in `api/assertions/`.
 
-**Passing data between steps.** Models (`Product`, `Customer`, `CreatedUser`) are classes with getters and setters. A per-test `ScenarioContext` stores them with typed `set(key, value)` and `get(key)`:
-- the cart step saves the chosen products, and the overview step reads them to check the item total
-- reading a key that was never set fails with a clear message
+## Beyond the brief
 
-Each test gets a fresh context, so tests stay independent.
+These are small additions that make the suite easier to extend and debug:
 
-**BDD style.** Steps are written as `Given / When / Then / And`, which map to `test.step` with `box: true`. The report reads like a scenario, and a failure points at the step that failed. There's no Gherkin layer, which keeps the suite small and easy to follow.
+- **BDD-style steps.** `Given / When / Then / And` wrap `test.step`, so the HTML report reads like a scenario, and a failure points at the step that broke.
+- **Passing data between steps.** Models are small classes with getters and setters. A per-test `ScenarioContext` stores them with typed `set` / `get`:
+  - the cart step saves the selected products, and the overview step reads them to check the item total
+  - the API bonus test saves the created user and verifies it in the next step
+  - reading a key that was never set fails with a clear message
+- **One config class.** `config/GlobalConfig.ts` reads every setting (environment, URLs, API key, evidence, headed mode, retries, timeouts) from environment variables or `.env`, falling back to the profile in `config/environments.ts`. Invalid values stop the run with a clear message. Adding a `staging` environment means one new entry.
+- **Switchable evidence.**
+  - `npm test` keeps a screenshot and trace only when a test fails.
+  - `npm run test:evidence` records a screenshot and video of every UI test.
+  - `EVIDENCE=off` records nothing.
+- **Readable failures.**
+  - UI actions are wrapped so an error names the page and action, for example `Could not add "Sauce Labs Backpack" to the cart on ProductsPage`, and keeps the original error.
+  - The API client reports non-JSON responses with method, path, status and body.
+- **API evidence.** Every request and response (params, body, status, duration) is attached to the HTML report as JSON.
+- **API retry.** Network errors and 408/429/5xx responses are retried with backoff, controlled by `API_MAX_RETRIES`. Other statuses are returned as-is, so the tests assert on them.
 
-**Error handling.**
-- UI actions run through `perform()`, which catches the Playwright error and rethrows it as an `ActionError` naming the page and the action (for example `Could not add "Sauce Labs Backpack" to the cart on InventoryPage`), with the original error kept as the cause.
-- The API client catches network failures and non-JSON bodies and rethrows an `ApiError` with the method, path, status and a slice of the body.
-- Nothing is silently swallowed: every catch rethrows, so tests fail loudly and clearly.
+Settings (all optional, see `.env.example`): `TEST_ENV`, `UI_BASE_URL`, `API_BASE_URL`, `REQRES_API_KEY`, `SAUCE_PASSWORD`, `EVIDENCE` (`off` / `failure` / `full`), `HEADED`, `SLOW_MO`, `RETRIES`, `WORKERS`, `API_MAX_RETRIES`, `API_RETRY_DELAY_MS`, and the timeout values.
 
-**Retries at three levels.**
-1. **Element level:** Playwright auto-waiting and web-first assertions (`toHaveText`, `toHaveCount`, `expect.poll`) retry until the timeout.
-2. **Request level:** `BaseApiClient` retries network errors and statuses 408/429/5xx, with exponential backoff (`API_MAX_RETRIES`, default 2).
-3. **Test level:** `retries` in `playwright.config.ts` (1 locally, 2 on CI).
+Note: reqres.in has at times required an `x-api-key` header. The public free key is sent by default, so the API tests work either way.
 
-**Independent and parallel.** Every test logs in and builds its own data. There's no shared state and no ordering between tests, and `fullyParallel` is on.
+## Trade-offs and what I would do next
 
-## Configuration
-
-All settings live in one class, `src/config/GlobalConfig.ts`, and every value has a default. The order of precedence is:
-
-1. environment variable
-2. `.env` file (copy `.env.example`)
-3. the selected environment profile in `src/config/environments.ts`
-4. built-in default
-
-Invalid values (for example `EVIDENCE=maybe`) stop the run with a clear message.
-
-| Variable | Default | Purpose |
-|---|---|---|
-| `TEST_ENV` | `production` | Which profile in `environments.ts` to use |
-| `UI_BASE_URL` | from profile | Override the saucedemo URL |
-| `API_BASE_URL` | from profile | Override the reqres URL |
-| `REQRES_API_KEY` | from profile | `x-api-key` header for reqres |
-| `SAUCE_PASSWORD` | from profile | Password for the saucedemo users |
-| `EVIDENCE` | `failure` | `off`, `failure` or `full` |
-| `HEADED` | `false` | Show the browser |
-| `SLOW_MO` | `0` | Delay in ms between browser actions |
-| `RETRIES` | `1` (`2` on CI) | Test-level retries |
-| `WORKERS` | Playwright default (`2` on CI) | Parallel workers |
-| `API_MAX_RETRIES` | `2` | Retries for network errors and 408/429/5xx |
-| `API_RETRY_DELAY_MS` | `500` | First retry delay, doubled on each attempt |
-| `TEST_TIMEOUT_MS` / `EXPECT_TIMEOUT_MS` / `ACTION_TIMEOUT_MS` / `NAVIGATION_TIMEOUT_MS` | `30000` / `7000` / `10000` / `20000` | Timeouts |
-
-To add an environment (for example `staging`), add one entry to `environments.ts` and run with `TEST_ENV=staging`.
-
-Note: reqres.in has at times required an `x-api-key` header. The public free key is sent by default so the API tests keep working either way.
-
-## Trade-offs and next steps
-
-- **Login through the UI in every test.** This is realistic and keeps tests independent. For a larger suite, I'd log in once in a setup project and reuse `storageState`.
-- **Chromium only**, as the brief allows. Adding Firefox or WebKit is one entry each in `projects`.
-- **No response-schema library.** Field checks use `expect.objectContaining`. With more endpoints I'd add JSON-schema validation (for example `zod` or `ajv`).
-- **Possible next additions:**
-  - `problem_user` scenarios (broken images, wrong sort)
-  - negative checkout validation (empty fields)
+- **Login runs through the UI in every test.** This is simple and keeps tests independent. For a bigger suite, I would log in once in a setup project and reuse `storageState`.
+- **The product names are fixed** in `test-data/products.ts` so runs are repeatable. The prices are still read from the page.
+- **Chromium only**, as the brief allows. Firefox or WebKit is one extra entry in `projects`.
+- **Next:**
+  - `problem_user` scenarios
+  - checkout form validation (empty fields)
+  - JSON-schema validation for API responses
   - ESLint with `eslint-plugin-playwright` to catch missing `await`s
-  - a CI workflow that publishes the HTML report
+  - a CI job that publishes the HTML report
