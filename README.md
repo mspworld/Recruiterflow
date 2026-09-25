@@ -118,7 +118,8 @@ I also added a few small tests, each checking one thing:
 
 **Retries.**
 - Playwright retries a failed test once locally, twice on CI.
-- The API client retries network errors and 408/429/5xx responses up to 2 times.
+- The API client retries network errors and 408/5xx responses up to 2 times.
+- A 429 (rate limit) is **not** retried, because reqres's limit is per day and retrying only uses up more requests. The test fails straight away with reqres's own message, including when the limit resets.
 - Any other status is returned as-is, so the test can check it.
 
 **Evidence.**
@@ -134,13 +135,23 @@ All optional. Set them as environment variables, or copy `.env.example` to `.env
 |---|---|---|
 | `TEST_ENV` | `production` | Which profile in `config/environments.ts` to use |
 | `UI_BASE_URL` / `API_BASE_URL` | saucedemo / reqres | Point the tests at another site |
-| `REQRES_API_KEY` | `reqres-free-v1` | reqres has sometimes required this header; sent just in case |
+| `REQRES_API_KEY` | `reqres-free-v1` | reqres API key, sent as the `x-api-key` header |
 | `SAUCE_PASSWORD` | `secret_sauce` | Password for the test users |
 | `EVIDENCE` | `failure` | `off`, `failure` or `full` |
 | `HEADED` / `SLOW_MO` | `false` / `0` | Show the browser and slow it down |
 | `API_RETRIES` | `2` | Retries for network errors and 5xx |
 
 To add another environment, add one entry to `config/environments.ts` and run with `TEST_ENV=<name>`.
+
+## Note on the reqres.in rate limit
+
+The brief describes reqres as having no rate limiting, but reqres now allows anonymous users **40 requests per day per IP address**. The limit resets at midnight UTC.
+
+One full run of this suite makes 3 API requests, so a normal review is well within the limit. If you do hit it, the API tests fail with a message like:
+
+> `POST /api/users was rate-limited (429): You've hit the anonymous demo limit of 40 requests/day from this IP. Resets in 14h 50m.`
+
+A free reqres account gives a personal API key with a higher limit. Put it in `.env` as `REQRES_API_KEY=...`, and no code changes are needed.
 
 ## Trade-offs and next steps
 

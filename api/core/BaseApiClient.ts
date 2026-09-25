@@ -5,7 +5,8 @@ import { withRetry } from '@core/retry';
 import { ApiError } from './ApiError';
 import type { ApiResponse, RequestOptions } from './types';
 
-const RETRY_STATUSES = [408, 429, 500, 502, 503, 504];
+const RETRY_STATUSES = [408, 500, 502, 503, 504];
+const RATE_LIMITED = 429;
 
 export abstract class BaseApiClient {
   constructor(
@@ -45,10 +46,24 @@ export abstract class BaseApiClient {
       throw new ApiError(`${method} ${path} got no response: ${reason}`, true);
     }
 
+    if (response.status() === RATE_LIMITED) {
+      throw new ApiError(`${method} ${path} was rate-limited (429): ${await this.readMessage(response)}`);
+    }
+
     if (RETRY_STATUSES.includes(response.status())) {
       throw new ApiError(`${method} ${path} returned ${response.status()}`, true);
     }
     return response;
+  }
+
+  private async readMessage(response: APIResponse): Promise<string> {
+    const text = await response.text();
+    try {
+      const body = JSON.parse(text);
+      return [body.message, body.resets_in && `Resets in ${body.resets_in}.`].filter(Boolean).join(' ');
+    } catch {
+      return text.slice(0, 200);
+    }
   }
 
   private async readJson<T>(response: APIResponse, method: string, path: string): Promise<T> {
