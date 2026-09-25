@@ -13,7 +13,7 @@ test.describe('Cart', () => {
     await Then('the cart badge shows 2', () => productsPage.header.expectCartCount(2));
   });
 
-  test('the cart page lists exactly the products that were added', async ({ addToCart, productsPage, cartPage, uiContext }) => {
+  test('the cart page lists the products that were added', async ({ addToCart, productsPage, cartPage, uiContext }) => {
     await And('I have added two products to the cart', () => addToCart(cartProductNames));
 
     await When('I open the cart', async () => {
@@ -22,7 +22,7 @@ test.describe('Cart', () => {
     });
 
     await Then('the cart lists exactly those products', () =>
-      cartPage.products.expectExactly(uiContext.get('selectedProducts')),
+      cartPage.productList.expectExactly(uiContext.get('selectedProducts')),
     );
   });
 });

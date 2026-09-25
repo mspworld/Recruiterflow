@@ -1,27 +1,23 @@
-export class ScenarioContext<TState extends object> {
-  private readonly store = new Map<keyof TState, TState[keyof TState]>();
+export class ScenarioContext<T extends object> {
+  private readonly data: Partial<T> = {};
 
-  set<K extends keyof TState>(key: K, value: TState[K]): this {
-    this.store.set(key, value);
-    return this;
+  set<K extends keyof T>(key: K, value: T[K]): void {
+    this.data[key] = value;
   }
 
-  get<K extends keyof TState>(key: K): TState[K] {
-    if (!this.store.has(key)) {
-      throw new Error(`ScenarioContext: "${String(key)}" was read before it was set`);
+  get<K extends keyof T>(key: K): T[K] {
+    const value = this.data[key];
+    if (value === undefined) {
+      throw new Error(`Scenario data "${String(key)}" was read before an earlier step set it`);
     }
-    return this.store.get(key) as TState[K];
-  }
-
-  has<K extends keyof TState>(key: K): boolean {
-    return this.store.has(key);
+    return value as T[K];
   }
 
   isEmpty(): boolean {
-    return this.store.size === 0;
+    return Object.keys(this.data).length === 0;
   }
 
-  toJSON(): Partial<TState> {
-    return Object.fromEntries(this.store) as Partial<TState>;
+  toJSON(): Partial<T> {
+    return this.data;
   }
 }

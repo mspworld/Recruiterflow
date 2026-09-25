@@ -1,5 +1,4 @@
 import { expect, type Locator, type Page } from '@playwright/test';
-import { perform } from '@core/perform';
 
 export class Header {
   private readonly cartLink: Locator;
@@ -11,14 +10,14 @@ export class Header {
   }
 
   async openCart(): Promise<void> {
-    await perform('open the cart from the header', () => this.cartLink.click());
+    await this.cartLink.click();
   }
 
   async expectCartCount(count: number): Promise<void> {
     if (count === 0) {
-      await expect(this.cartBadge, 'Cart badge should be hidden when the cart is empty').toBeHidden();
-      return;
+      await expect(this.cartBadge).toBeHidden();
+    } else {
+      await expect(this.cartBadge).toHaveText(String(count));
     }
-    await expect(this.cartBadge, 'Cart badge count').toHaveText(String(count));
   }
 }

@@ -24,7 +24,7 @@ test.describe('Checkout', () => {
   test('the overview shows the selected products and the correct item total', async ({ checkoutOverviewPage, uiContext }) => {
     const selected = uiContext.get('selectedProducts');
 
-    await Then('the overview lists exactly the selected products', () => checkoutOverviewPage.products.expectExactly(selected));
+    await Then('the overview lists the selected products', () => checkoutOverviewPage.productList.expectExactly(selected));
     await And('the item total is the sum of their prices', () =>
       checkoutOverviewPage.expectItemTotal(sumPrices(selected.map((product) => product.price))),
     );
@@ -39,12 +39,12 @@ test.describe('Checkout', () => {
     await Then('I see the thank-you message', () => checkoutCompletePage.expectOrderConfirmed(messages.orderComplete));
   });
 
-  test('the cart is emptied after the order is placed', async ({ checkoutOverviewPage, checkoutCompletePage }) => {
+  test('the cart is empty after the order is placed', async ({ checkoutOverviewPage, checkoutCompletePage }) => {
     await When('I finish the order', async () => {
       await checkoutOverviewPage.finish();
       await checkoutCompletePage.expectLoaded();
     });
 
-    await Then('the cart badge is no longer shown', () => checkoutCompletePage.header.expectCartCount(0));
+    await Then('the cart badge is gone', () => checkoutCompletePage.header.expectCartCount(0));
   });
 });

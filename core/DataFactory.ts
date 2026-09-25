@@ -1,15 +1,13 @@
-const FIRST_NAMES = ['Asha', 'Liam', 'Priya', 'Noah', 'Meera', 'Ethan', 'Kavya', 'Omar'] as const;
-const LAST_NAMES = ['Kumar', 'Smith', 'Iyer', 'Garcia', 'Nair', 'Brown', 'Patel', 'Silva'] as const;
-const JOBS = ['qa engineer', 'developer', 'product manager', 'designer', 'sdet'] as const;
+const firstNames = ['Asha', 'Liam', 'Priya', 'Noah', 'Meera', 'Ethan'];
+const lastNames = ['Kumar', 'Smith', 'Iyer', 'Garcia', 'Nair', 'Brown'];
+const jobs = ['qa engineer', 'developer', 'product manager', 'designer'];
 
-const randomInt = (min: number, max: number): number => Math.floor(Math.random() * (max - min + 1)) + min;
-
-const pickOne = <T>(items: readonly T[]): T => items[randomInt(0, items.length - 1)];
+const pick = (list: string[]): string => list[Math.floor(Math.random() * list.length)];
 
 export const DataFactory = {
-  uniqueSuffix: (): string => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
-  firstName: (): string => pickOne(FIRST_NAMES),
-  lastName: (): string => pickOne(LAST_NAMES),
-  jobTitle: (): string => pickOne(JOBS),
-  postalCode: (): string => String(randomInt(10000, 99999)),
+  firstName: () => pick(firstNames),
+  lastName: () => pick(lastNames),
+  job: () => pick(jobs),
+  postalCode: () => String(Math.floor(10000 + Math.random() * 90000)),
+  uniqueName: (prefix: string) => `${prefix}-${Date.now()}`,
 };

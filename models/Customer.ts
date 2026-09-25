@@ -1,16 +1,18 @@
 import { DataFactory } from '@core/DataFactory';
 
 export class Customer {
-  private _firstName = '';
-  private _lastName = '';
-  private _postalCode = '';
+  private _firstName: string;
+  private _lastName: string;
+  private _postalCode: string;
+
+  constructor(firstName: string, lastName: string, postalCode: string) {
+    this._firstName = firstName;
+    this._lastName = lastName;
+    this._postalCode = postalCode;
+  }
 
   static random(): Customer {
-    const customer = new Customer();
-    customer.firstName = DataFactory.firstName();
-    customer.lastName = DataFactory.lastName();
-    customer.postalCode = DataFactory.postalCode();
-    return customer;
+    return new Customer(DataFactory.firstName(), DataFactory.lastName(), DataFactory.postalCode());
   }
 
   get firstName(): string {
@@ -37,7 +39,7 @@ export class Customer {
     this._postalCode = value;
   }
 
-  toJSON(): { firstName: string; lastName: string; postalCode: string } {
+  toJSON() {
     return { firstName: this._firstName, lastName: this._lastName, postalCode: this._postalCode };
   }
 }

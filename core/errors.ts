@@ -1,8 +1,7 @@
-const describeCause = (cause: unknown): string => (cause instanceof Error ? cause.message : String(cause));
-
 export class ActionError extends Error {
   constructor(message: string, cause: unknown) {
-    super(`${message}\nReason: ${describeCause(cause)}`, { cause });
+    const reason = cause instanceof Error ? cause.message : String(cause);
+    super(`${message}\nReason: ${reason}`, { cause });
     this.name = 'ActionError';
   }
 }

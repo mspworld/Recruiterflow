@@ -1,18 +1,20 @@
 import type { CreateUserResponse } from '@api/types/user.types';
 
 export class CreatedUser {
-  private _id = '';
-  private _name = '';
-  private _job = '';
-  private _createdAt = '';
+  private _id: string;
+  private _name: string;
+  private _job: string;
+  private _createdAt: string;
+
+  constructor(id: string, name: string, job: string, createdAt: string) {
+    this._id = id;
+    this._name = name;
+    this._job = job;
+    this._createdAt = createdAt;
+  }
 
   static fromResponse(body: CreateUserResponse): CreatedUser {
-    const user = new CreatedUser();
-    user.id = String(body.id);
-    user.name = body.name;
-    user.job = body.job;
-    user.createdAt = body.createdAt;
-    return user;
+    return new CreatedUser(String(body.id), body.name, body.job, body.createdAt);
   }
 
   get id(): string {
@@ -47,7 +49,7 @@ export class CreatedUser {
     this._createdAt = value;
   }
 
-  toJSON(): { id: string; name: string; job: string; createdAt: string } {
+  toJSON(): CreateUserResponse {
     return { id: this._id, name: this._name, job: this._job, createdAt: this._createdAt };
   }
 }

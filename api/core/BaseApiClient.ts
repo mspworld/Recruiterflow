@@ -1,85 +1,64 @@
-import type { APIRequestContext, APIResponse } from '@playwright/test';
+import type { APIRequestContext, APIResponse, TestInfo } from '@playwright/test';
 import { config } from '@config/GlobalConfig';
+import { attachJson } from '@core/evidence';
 import { withRetry } from '@core/retry';
 import { ApiError } from './ApiError';
-import type { ApiResponse, ExchangeRecorder, HttpMethod, RequestOptions } from './types';
+import type { ApiResponse, RequestOptions } from './types';
 
-const RETRYABLE_STATUSES = new Set([408, 429, 500, 502, 503, 504]);
+const RETRY_STATUSES = [408, 429, 500, 502, 503, 504];
 
 export abstract class BaseApiClient {
   constructor(
     private readonly request: APIRequestContext,
-    private readonly record?: ExchangeRecorder,
+    private readonly testInfo?: TestInfo,
   ) {}
 
-  protected get<T>(path: string, options: Omit<RequestOptions, 'data'> = {}): Promise<ApiResponse<T>> {
-    return this.send<T>('GET', path, options);
+  protected get<T>(path: string, params?: RequestOptions['params']): Promise<ApiResponse<T>> {
+    return this.send<T>('GET', path, { params });
   }
 
-  protected post<T>(path: string, data: unknown, options: Omit<RequestOptions, 'data'> = {}): Promise<ApiResponse<T>> {
-    return this.send<T>('POST', path, { ...options, data });
+  protected post<T>(path: string, data: unknown): Promise<ApiResponse<T>> {
+    return this.send<T>('POST', path, { data });
   }
 
-  private async send<T>(method: HttpMethod, path: string, options: RequestOptions): Promise<ApiResponse<T>> {
-    let attempts = 0;
-
-    const result = await withRetry(
-      async () => {
-        attempts++;
-        const startedAt = Date.now();
-        const response = await this.dispatch(method, path, options);
-        const durationMs = Date.now() - startedAt;
-
-        if (RETRYABLE_STATUSES.has(response.status())) {
-          throw new ApiError(`${method} ${path} returned ${response.status()}`, true, response.status());
-        }
-
-        return {
-          status: response.status(),
-          ok: response.ok(),
-          headers: response.headers(),
-          body: await this.parseBody<T>(response, method, path),
-          durationMs,
-        };
-      },
-      {
-        retries: config.api.maxRetries,
-        baseDelayMs: config.api.retryDelayMs,
-        shouldRetry: (error) => error instanceof ApiError && error.retryable,
-      },
+  private async send<T>(method: string, path: string, options: RequestOptions): Promise<ApiResponse<T>> {
+    const response = await withRetry(
+      () => this.fetchOnce(method, path, options),
+      config.apiRetries,
+      (error) => error instanceof ApiError && error.retryable,
     );
 
-    await this.record?.({
-      request: { method, path, ...options },
-      response: { status: result.status, durationMs: result.durationMs, body: result.body },
-      attempts,
-    });
+    const result = { status: response.status(), body: await this.readJson<T>(response, method, path) };
 
+    if (this.testInfo) {
+      await attachJson(this.testInfo, `${method} ${path}`, { request: { method, path, ...options }, response: result });
+    }
     return result;
   }
 
-  private async dispatch(method: HttpMethod, path: string, options: RequestOptions): Promise<APIResponse> {
+  private async fetchOnce(method: string, path: string, options: RequestOptions): Promise<APIResponse> {
+    let response: APIResponse;
     try {
-      return await this.request.fetch(path, { method, params: options.params, data: options.data });
+      response = await this.request.fetch(path, { method, ...options });
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
-      throw new ApiError(`${method} ${path} failed before a response was received: ${reason}`, true, undefined, { cause: error });
+      throw new ApiError(`${method} ${path} got no response: ${reason}`, true);
     }
+
+    if (RETRY_STATUSES.includes(response.status())) {
+      throw new ApiError(`${method} ${path} returned ${response.status()}`, true);
+    }
+    return response;
   }
 
-  private async parseBody<T>(response: APIResponse, method: HttpMethod, path: string): Promise<T> {
+  private async readJson<T>(response: APIResponse, method: string, path: string): Promise<T> {
     const text = await response.text();
-    if (!text.trim()) return undefined as T;
+    if (!text) return undefined as T;
 
     try {
       return JSON.parse(text) as T;
-    } catch (error) {
-      throw new ApiError(
-        `${method} ${path} returned ${response.status()} with a non-JSON body: ${text.slice(0, 200)}`,
-        false,
-        response.status(),
-        { cause: error },
-      );
+    } catch {
+      throw new ApiError(`${method} ${path} did not return JSON (status ${response.status()}): ${text.slice(0, 200)}`);
     }
   }
 }

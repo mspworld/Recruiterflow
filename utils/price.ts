@@ -1,8 +1,10 @@
-export const parsePrice = (text: string): number => {
-  const match = text.replace(/,/g, '').match(/(\d+(?:\.\d+)?)/);
-  if (!match) throw new Error(`Could not read a price from "${text}"`);
-  return Number(match[1]);
-};
+export function parsePrice(text: string): number {
+  const price = Number(text.replace(/[^0-9.]/g, ''));
+  if (Number.isNaN(price)) throw new Error(`"${text}" is not a price`);
+  return price;
+}
 
-export const sumPrices = (prices: readonly number[]): number =>
-  Math.round(prices.reduce((total, price) => total + price, 0) * 100) / 100;
+export function sumPrices(prices: number[]): number {
+  const total = prices.reduce((sum, price) => sum + price, 0);
+  return Math.round(total * 100) / 100;
+}

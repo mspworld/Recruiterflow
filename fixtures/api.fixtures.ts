@@ -1,21 +1,17 @@
 import { test as base } from '@playwright/test';
+import { UsersClient } from '@api/clients/UsersClient';
 import { attachJson } from '@core/evidence';
 import { ScenarioContext } from '@core/ScenarioContext';
-import { UsersClient } from '@api/clients/UsersClient';
 import type { ApiScenario } from '@models/ApiScenario';
 
-export interface ApiFixtures {
+interface ApiFixtures {
   usersClient: UsersClient;
   apiContext: ScenarioContext<ApiScenario>;
 }
 
 export const apiTest = base.extend<ApiFixtures>({
   usersClient: async ({ request }, use, testInfo) => {
-    await use(
-      new UsersClient(request, (exchange) =>
-        attachJson(testInfo, `${exchange.request.method} ${exchange.request.path}`, exchange),
-      ),
-    );
+    await use(new UsersClient(request, testInfo));
   },
 
   apiContext: async ({}, use, testInfo) => {

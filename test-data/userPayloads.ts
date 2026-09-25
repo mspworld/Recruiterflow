@@ -1,14 +1,9 @@
-import { DataFactory } from '@core/DataFactory';
 import type { CreateUserRequest } from '@api/types/user.types';
+import { DataFactory } from '@core/DataFactory';
 
-export const userPayloads = {
-  morpheus: { name: 'morpheus', job: 'leader' },
-} as const satisfies Record<string, CreateUserRequest>;
+export const morpheus: CreateUserRequest = { name: 'morpheus', job: 'leader' };
 
-export const buildUserPayload = (overrides: Partial<CreateUserRequest> = {}): CreateUserRequest => ({
-  name: `${DataFactory.firstName().toLowerCase()}-${DataFactory.uniqueSuffix()}`,
-  job: DataFactory.jobTitle(),
-  ...overrides,
+export const newUserPayload = (): CreateUserRequest => ({
+  name: DataFactory.uniqueName('qa-user'),
+  job: DataFactory.job(),
 });
-
-export const LIST_PAGE = 2;

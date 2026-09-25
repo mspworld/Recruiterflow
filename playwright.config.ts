@@ -1,45 +1,41 @@
 import { defineConfig, devices } from '@playwright/test';
 import { config } from './config/GlobalConfig';
 
+const evidenceSettings = {
+  off: { screenshot: 'off', video: 'off', trace: 'off' },
+  failure: { screenshot: 'only-on-failure', video: 'off', trace: 'retain-on-failure' },
+  full: { screenshot: 'on', video: 'on', trace: 'retain-on-failure' },
+} as const;
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
-  forbidOnly: config.run.isCI,
-  retries: config.run.retries,
-  workers: config.run.workers,
-  timeout: config.timeouts.test,
-  expect: { timeout: config.timeouts.expect },
-  outputDir: 'test-results',
-  reporter: [
-    ['list'],
-    ['html', { outputFolder: 'playwright-report', open: 'never' }],
-  ],
-  use: {
-    actionTimeout: config.timeouts.action,
-    navigationTimeout: config.timeouts.navigation,
-  },
+  forbidOnly: config.isCI,
+  retries: config.isCI ? 2 : 1,
+  workers: config.isCI ? 2 : undefined,
+  timeout: 30_000,
+  expect: { timeout: 7_000 },
+  reporter: [['list'], ['html', { open: 'never' }]],
+
   projects: [
     {
       name: 'ui',
       testDir: './tests/ui',
       use: {
         ...devices['Desktop Chrome'],
-        baseURL: config.ui.baseUrl,
+        baseURL: config.uiBaseUrl,
         testIdAttribute: 'data-test',
-        headless: !config.run.headed,
-        launchOptions: { slowMo: config.run.slowMoMs },
-        ...config.evidence,
+        headless: !config.headed,
+        launchOptions: { slowMo: config.slowMo },
+        ...evidenceSettings[config.evidence],
       },
     },
     {
       name: 'api',
       testDir: './tests/api',
       use: {
-        baseURL: config.api.baseUrl,
-        extraHTTPHeaders: {
-          Accept: 'application/json',
-          'x-api-key': config.api.apiKey,
-        },
+        baseURL: config.apiBaseUrl,
+        extraHTTPHeaders: { 'x-api-key': config.apiKey },
       },
     },
   ],

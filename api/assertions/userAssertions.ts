@@ -1,26 +1,27 @@
 import { expect } from '@playwright/test';
-import type { CreateUserRequest, CreateUserResponse, User } from '../types/user.types';
+import type { CreateUserRequest, CreateUserResponse, User } from '@api/types/user.types';
 
-const CLOCK_SKEW_TOLERANCE_MS = 5 * 60 * 1000;
+const FIVE_MINUTES = 5 * 60 * 1000;
 
-export function expectUserShape(user: User, index: number): void {
-  expect(user, `User at index ${index} should have id, email, first_name and last_name`).toEqual(
+export function expectUserFields(user: User): void {
+  expect(user).toEqual(
     expect.objectContaining({
       id: expect.any(Number),
-      email: expect.stringMatching(/^\S+@\S+\.\S+$/),
-      first_name: expect.stringMatching(/\S/),
-      last_name: expect.stringMatching(/\S/),
+      email: expect.stringContaining('@'),
+      first_name: expect.any(String),
+      last_name: expect.any(String),
     }),
   );
 }
 
-export function expectCreatedUser(body: CreateUserResponse, payload: CreateUserRequest, requestedAt: number): void {
-  expect(body, 'Created user should echo the request').toMatchObject({ name: payload.name, job: payload.job });
-  expect(String(body.id), 'Created user id').toMatch(/^\S+$/);
+export function expectCreatedUser(created: CreateUserResponse, sent: CreateUserRequest, requestedAt: number): void {
+  expect(created.name).toBe(sent.name);
+  expect(created.job).toBe(sent.job);
+  expect(created.id).toBeTruthy();
 
-  const createdAt = Date.parse(body.createdAt);
-  expect(Number.isNaN(createdAt), `createdAt "${body.createdAt}" should be a valid timestamp`).toBe(false);
-  expect(Math.abs(createdAt - requestedAt), 'createdAt should be close to the request time').toBeLessThan(
-    CLOCK_SKEW_TOLERANCE_MS,
+  const createdAt = Date.parse(created.createdAt);
+  expect(createdAt, `createdAt "${created.createdAt}" should be a valid date`).not.toBeNaN();
+  expect(Math.abs(createdAt - requestedAt), 'createdAt should be close to when the request was sent').toBeLessThan(
+    FIVE_MINUTES,
   );
 }

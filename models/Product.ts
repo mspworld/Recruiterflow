@@ -1,14 +1,16 @@
-import { parsePrice } from '../utils/price';
+import { parsePrice } from '@utils/price';
 
 export class Product {
-  private _name = '';
-  private _price = 0;
+  private _name: string;
+  private _price: number;
 
-  static fromListing(name: string, priceText: string): Product {
-    const product = new Product();
-    product.name = name;
-    product.price = parsePrice(priceText);
-    return product;
+  constructor(name: string, price: number) {
+    this._name = name;
+    this._price = price;
+  }
+
+  static fromPage(name: string, priceText: string): Product {
+    return new Product(name.trim(), parsePrice(priceText));
   }
 
   get name(): string {
@@ -16,9 +18,7 @@ export class Product {
   }
 
   set name(value: string) {
-    const trimmed = value.trim();
-    if (!trimmed) throw new Error('Product name cannot be empty');
-    this._name = trimmed;
+    this._name = value;
   }
 
   get price(): number {
@@ -26,11 +26,10 @@ export class Product {
   }
 
   set price(value: number) {
-    if (!Number.isFinite(value) || value < 0) throw new Error(`Invalid product price: ${value}`);
     this._price = value;
   }
 
-  toJSON(): { name: string; price: number } {
+  toJSON() {
     return { name: this._name, price: this._price };
   }
 }

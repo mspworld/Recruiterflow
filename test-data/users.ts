@@ -1,8 +1,8 @@
 import { config } from '@config/GlobalConfig';
-import { UserCredentials } from '../models/UserCredentials';
+import { UserCredentials } from '@models/UserCredentials';
 
 export const users = {
-  standard: UserCredentials.of('standard_user', config.ui.password),
-  lockedOut: UserCredentials.of('locked_out_user', config.ui.password),
-  problem: UserCredentials.of('problem_user', config.ui.password),
-} as const;
+  standard: new UserCredentials('standard_user', config.password),
+  lockedOut: new UserCredentials('locked_out_user', config.password),
+  problem: new UserCredentials('problem_user', config.password),
+};

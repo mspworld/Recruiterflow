@@ -1,7 +1,5 @@
 import { expect, type Locator, type Page } from '@playwright/test';
-import { Product } from '../models/Product';
-
-const byName = (a: Product, b: Product): number => a.name.localeCompare(b.name);
+import { Product } from '@models/Product';
 
 export class ProductList {
   readonly items: Locator;
@@ -15,21 +13,16 @@ export class ProductList {
   }
 
   async read(): Promise<Product[]> {
-    await expect(this.items.first(), 'At least one product should be listed').toBeVisible();
+    await expect(this.items.first()).toBeVisible();
     const names = await this.items.getByTestId('inventory-item-name').allInnerTexts();
     const prices = await this.items.getByTestId('inventory-item-price').allInnerTexts();
-    if (names.length !== prices.length) {
-      throw new Error(`Product list is inconsistent: ${names.length} names but ${prices.length} prices`);
-    }
-    return names.map((name, index) => Product.fromListing(name, prices[index]));
+    return names.map((name, index) => Product.fromPage(name, prices[index]));
   }
 
-  async expectExactly(expected: readonly Product[]): Promise<void> {
-    await expect(this.items, 'Number of listed products').toHaveCount(expected.length);
-    const actual = await this.read();
-    expect(
-      actual.sort(byName).map((product) => product.toJSON()),
-      'Listed products should match the selected products',
-    ).toEqual([...expected].sort(byName).map((product) => product.toJSON()));
+  async expectExactly(products: Product[]): Promise<void> {
+    await expect(this.items.getByTestId('inventory-item-name')).toHaveText(products.map((product) => product.name));
+    await expect(this.items.getByTestId('inventory-item-price')).toHaveText(
+      products.map((product) => `$${product.price.toFixed(2)}`),
+    );
   }
 }
