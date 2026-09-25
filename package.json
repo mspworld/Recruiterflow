@@ -8,7 +8,9 @@
     "test": "playwright test",
     "test:ui": "playwright test --project=ui",
     "test:api": "playwright test --project=api",
-    "test:headed": "playwright test --project=ui --headed",
+    "test:evidence": "cross-env EVIDENCE=full playwright test",
+    "test:headed": "cross-env HEADED=true playwright test --project=ui",
+    "test:watch": "cross-env HEADED=true SLOW_MO=600 WORKERS=1 playwright test --project=ui",
     "test:debug": "playwright test --debug",
     "report": "playwright show-report",
     "typecheck": "tsc --noEmit"
@@ -19,6 +21,7 @@
   "devDependencies": {
     "@playwright/test": "^1.63.0",
     "@types/node": "^26.6.2",
+    "cross-env": "^10.1.0",
     "dotenv": "^18.0.3",
     "typescript": "^7.0.2"
   }

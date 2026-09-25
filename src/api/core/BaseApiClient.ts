@@ -1,5 +1,5 @@
 import type { APIRequestContext, APIResponse } from '@playwright/test';
-import { env } from '@config/env';
+import { config } from '@config/GlobalConfig';
 import { withRetry } from '@core/retry';
 import { ApiError } from './ApiError';
 import type { ApiResponse, ExchangeRecorder, HttpMethod, RequestOptions } from './types';
@@ -43,8 +43,8 @@ export abstract class BaseApiClient {
         };
       },
       {
-        retries: env.apiMaxRetries,
-        baseDelayMs: 500,
+        retries: config.api.maxRetries,
+        baseDelayMs: config.api.retryDelayMs,
         shouldRetry: (error) => error instanceof ApiError && error.retryable,
       },
     );

@@ -22,23 +22,30 @@ npm test
 | `npm test` | Run the whole suite (UI + API) |
 | `npm run test:ui` | Run only the UI tests |
 | `npm run test:api` | Run only the API tests |
+| `npm run test:evidence` | Run everything with a screenshot and video for every UI test |
 | `npm run test:headed` | Run UI tests with the browser visible |
+| `npm run test:watch` | Run UI tests visible, one at a time, slowed down so each action can be followed |
 | `npm run test:debug` | Run with the Playwright inspector |
 | `npm run report` | Open the HTML report from the last run |
 | `npm run typecheck` | Type-check the whole project |
 
 ## Report and evidence
 
-After a run, `npm run report` opens the HTML report. For every test it shows:
+After a run, `npm run report` opens the HTML report. Evidence is controlled by the `EVIDENCE` setting:
 
-- **BDD steps** — each `Given / When / Then` as its own step, with timing
-- **Screenshot** — final screenshot of every UI test (pass or fail)
-- **Video** — full recording of every UI test (pass or fail)
-- **Trace** — kept for failed UI tests; open it from the report to replay each action
-- **API exchanges** — every request and response (method, path, params, body, status, duration, attempts) attached as JSON
-- **Scenario data** — the products, customer or payload a test generated, attached as JSON
+| `EVIDENCE` | Screenshot | Video | Trace | Used by |
+|---|---|---|---|---|
+| `failure` (default) | on failure | off | on failure | `npm test` |
+| `full` | every test | every test | on failure | `npm run test:evidence` |
+| `off` | off | off | off | fastest local runs |
 
-Raw files are also written to `test-results/`.
+In every mode the report also shows:
+
+- **BDD steps**: each `Given / When / Then` as its own step, with timing
+- **API exchanges**: every request and response (method, path, params, body, status, duration, attempts) attached as JSON
+- **Scenario data**: the products, customer or payload a test generated, attached as JSON
+
+Raw files are written to `test-results/`.
 
 ## Scenario coverage
 
@@ -60,7 +67,9 @@ Extra: `sorting.spec.ts` also checks the full order for all four sort options (d
 ```
 ├── playwright.config.ts        Two projects: "ui" (browser) and "api" (no browser)
 ├── src/
-│   ├── config/env.ts           Base URLs, API key, password, retry count (env vars with defaults)
+│   ├── config/
+│   │   ├── GlobalConfig.ts     Single config class: environment, URLs, run mode, evidence, timeouts
+│   │   └── environments.ts     One profile per environment (URLs, key, password)
 │   ├── core/                   Shared, framework-level helpers
 │   │   ├── bdd.ts              Given / When / Then / And → test.step
 │   │   ├── ScenarioContext.ts  Typed set/get store for passing data between steps
@@ -133,15 +142,32 @@ Each test gets a fresh context, so tests stay independent.
 
 ## Configuration
 
-All settings have defaults. To override one, copy `.env.example` to `.env` or set environment variables:
+All settings live in one class, `src/config/GlobalConfig.ts`, and every value has a default. The order of precedence is:
 
-| Variable | Default |
-|---|---|
-| `UI_BASE_URL` | `https://www.saucedemo.com` |
-| `API_BASE_URL` | `https://reqres.in` |
-| `REQRES_API_KEY` | `reqres-free-v1` |
-| `SAUCE_PASSWORD` | `secret_sauce` |
-| `API_MAX_RETRIES` | `2` |
+1. environment variable
+2. `.env` file (copy `.env.example`)
+3. the selected environment profile in `src/config/environments.ts`
+4. built-in default
+
+Invalid values (for example `EVIDENCE=maybe`) stop the run with a clear message.
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `TEST_ENV` | `production` | Which profile in `environments.ts` to use |
+| `UI_BASE_URL` | from profile | Override the saucedemo URL |
+| `API_BASE_URL` | from profile | Override the reqres URL |
+| `REQRES_API_KEY` | from profile | `x-api-key` header for reqres |
+| `SAUCE_PASSWORD` | from profile | Password for the saucedemo users |
+| `EVIDENCE` | `failure` | `off`, `failure` or `full` |
+| `HEADED` | `false` | Show the browser |
+| `SLOW_MO` | `0` | Delay in ms between browser actions |
+| `RETRIES` | `1` (`2` on CI) | Test-level retries |
+| `WORKERS` | Playwright default (`2` on CI) | Parallel workers |
+| `API_MAX_RETRIES` | `2` | Retries for network errors and 408/429/5xx |
+| `API_RETRY_DELAY_MS` | `500` | First retry delay, doubled on each attempt |
+| `TEST_TIMEOUT_MS` / `EXPECT_TIMEOUT_MS` / `ACTION_TIMEOUT_MS` / `NAVIGATION_TIMEOUT_MS` | `30000` / `7000` / `10000` / `20000` | Timeouts |
+
+To add an environment (for example `staging`), add one entry to `environments.ts` and run with `TEST_ENV=staging`.
 
 Note: reqres.in has at times required an `x-api-key` header. The public free key is sent by default so the API tests keep working either way.
 
