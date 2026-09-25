@@ -1,5 +1,4 @@
 import { expect, type Locator, type Page } from '@playwright/test';
-import { resilient } from '@core/locators';
 import { perform } from '@core/perform';
 
 export class Header {
@@ -7,8 +6,8 @@ export class Header {
   private readonly cartBadge: Locator;
 
   constructor(page: Page) {
-    this.cartLink = resilient(page.getByTestId('shopping-cart-link'), page.locator('.shopping_cart_link'));
-    this.cartBadge = resilient(page.getByTestId('shopping-cart-badge'), page.locator('.shopping_cart_badge'));
+    this.cartLink = page.getByTestId('shopping-cart-link');
+    this.cartBadge = page.getByTestId('shopping-cart-badge');
   }
 
   async openCart(): Promise<void> {

@@ -1,12 +1,11 @@
 import { expect, type Locator } from '@playwright/test';
-import { resilient } from '@core/locators';
 import { Header } from '../components/Header';
 import { BasePage } from './BasePage';
 
 export abstract class SecurePage extends BasePage {
   protected abstract readonly expectedTitle: string;
   readonly header = new Header(this.page);
-  protected readonly title = resilient(this.page.getByTestId('title'), this.page.locator('.title'));
+  protected readonly title = this.page.getByTestId('title');
 
   protected override landmark(): Locator {
     return this.title;

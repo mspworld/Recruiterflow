@@ -1,5 +1,4 @@
 import { expect } from '@playwright/test';
-import { resilient } from '@core/locators';
 import { ProductList } from '../components/ProductList';
 import { pageTitles } from '../test-data/messages';
 import { parsePrice } from '../utils/price';
@@ -10,7 +9,7 @@ export class CheckoutOverviewPage extends SecurePage {
   protected override readonly expectedTitle = pageTitles.checkoutOverview;
   readonly products = new ProductList(this.page);
   private readonly itemTotal = this.page.getByTestId('subtotal-label');
-  private readonly finishButton = resilient(this.page.getByTestId('finish'), this.page.getByRole('button', { name: 'Finish' }));
+  private readonly finishButton = this.page.getByRole('button', { name: 'Finish' });
 
   async expectItemTotal(expected: number): Promise<void> {
     await expect

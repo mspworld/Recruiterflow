@@ -1,6 +1,5 @@
 import { expect } from '@playwright/test';
 import { DataFactory } from '@core/DataFactory';
-import { resilient } from '@core/locators';
 import { ProductList } from '../components/ProductList';
 import { pageTitles } from '../test-data/messages';
 import { sortCases, type SortOption } from '../test-data/sortOptions';
@@ -11,7 +10,7 @@ export class ProductsPage extends SecurePage {
   protected override readonly path = '/inventory.html';
   protected override readonly expectedTitle = pageTitles.products;
   readonly products = new ProductList(this.page);
-  private readonly sortSelect = resilient(this.page.getByTestId('product-sort-container'), this.page.getByRole('combobox'));
+  private readonly sortSelect = this.page.getByTestId('product-sort-container');
   private readonly activeSort = this.page.getByTestId('active-option');
 
   async getProducts(): Promise<Product[]> {
