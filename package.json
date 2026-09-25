@@ -1,0 +1,25 @@
+{
+  "name": "recruiterflow-qa-assignment",
+  "version": "1.0.0",
+  "description": "Playwright + TypeScript UI and API test suite for saucedemo.com and reqres.in",
+  "private": true,
+  "scripts": {
+    "postinstall": "playwright install chromium",
+    "test": "playwright test",
+    "test:ui": "playwright test --project=ui",
+    "test:api": "playwright test --project=api",
+    "test:headed": "playwright test --project=ui --headed",
+    "test:debug": "playwright test --debug",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.2",
+    "dotenv": "^18.0.3",
+    "typescript": "^7.0.2"
+  }
+}
