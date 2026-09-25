@@ -7,9 +7,11 @@ export enum SortOption {
   PriceHighToLow = 'hilo',
 }
 
+type Sortable = Pick<Product, 'name' | 'price'>;
+
 interface SortCase {
   label: string;
-  compare: (a: Product, b: Product) => number;
+  compare: (a: Sortable, b: Sortable) => number;
 }
 
 export const sortCases: Record<SortOption, SortCase> = {
