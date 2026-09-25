@@ -1,18 +1,28 @@
 import { test } from '@fixtures';
-import { Given, Then, When } from '@core/bdd';
-import { PRODUCTS_TO_ADD } from '@data/checkout';
+import { And, Given, Then, When } from '@core/bdd';
+import { cartProductNames } from '@data/products';
 import { users } from '@data/users';
 
 test.describe('Cart', () => {
-  test('adding two products updates the cart badge to 2', async ({ loginAs, productsPage, uiContext }) => {
+  test.beforeEach(async ({ loginAs }) => {
     await Given('I am logged in as the standard user', () => loginAs(users.standard));
+  });
 
-    await When(`I add ${PRODUCTS_TO_ADD} products to the cart`, async () => {
-      const products = await productsPage.pickRandomProducts(PRODUCTS_TO_ADD);
-      await productsPage.addToCart(...products);
-      uiContext.set('selectedProducts', products);
+  test('adding two products updates the cart badge to 2', async ({ addToCart, productsPage }) => {
+    await When('I add two products to the cart', () => addToCart(cartProductNames));
+    await Then('the cart badge shows 2', () => productsPage.header.expectCartCount(2));
+  });
+
+  test('the cart page lists exactly the products that were added', async ({ addToCart, productsPage, cartPage, uiContext }) => {
+    await And('I have added two products to the cart', () => addToCart(cartProductNames));
+
+    await When('I open the cart', async () => {
+      await productsPage.header.openCart();
+      await cartPage.expectLoaded();
     });
 
-    await Then(`the cart badge shows ${PRODUCTS_TO_ADD}`, () => productsPage.header.expectCartCount(PRODUCTS_TO_ADD));
+    await Then('the cart lists exactly those products', () =>
+      cartPage.products.expectExactly(uiContext.get('selectedProducts')),
+    );
   });
 });

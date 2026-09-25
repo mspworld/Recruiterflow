@@ -1,5 +1,4 @@
 import { expect } from '@playwright/test';
-import { DataFactory } from '@core/DataFactory';
 import { ProductList } from '../components/ProductList';
 import { pageTitles } from '../test-data/messages';
 import { sortCases, type SortOption } from '../test-data/sortOptions';
@@ -17,8 +16,15 @@ export class ProductsPage extends SecurePage {
     return this.perform('read the product list', () => this.products.read());
   }
 
-  async pickRandomProducts(count: number): Promise<Product[]> {
-    return DataFactory.sample(await this.getProducts(), count);
+  async findProducts(names: readonly string[]): Promise<Product[]> {
+    const listed = await this.getProducts();
+    return names.map((name) => {
+      const product = listed.find((candidate) => candidate.name === name);
+      if (!product) {
+        throw new Error(`Product "${name}" is not listed. Available: ${listed.map((item) => item.name).join(', ')}`);
+      }
+      return product;
+    });
   }
 
   async addToCart(...products: Product[]): Promise<void> {

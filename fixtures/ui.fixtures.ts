@@ -1,6 +1,7 @@
 import { test as base, type Page } from '@playwright/test';
 import { attachJson } from '@core/evidence';
 import { ScenarioContext } from '@core/ScenarioContext';
+import type { Product } from '@models/Product';
 import type { UserCredentials } from '@models/UserCredentials';
 import type { UiScenario } from '@models/UiScenario';
 import { CartPage } from '@pages/CartPage';
@@ -26,6 +27,7 @@ export interface UiFixtures {
   checkoutOverviewPage: CheckoutOverviewPage;
   checkoutCompletePage: CheckoutCompletePage;
   loginAs: (user: UserCredentials) => Promise<ProductsPage>;
+  addToCart: (productNames: readonly string[]) => Promise<Product[]>;
   uiContext: ScenarioContext<UiScenario>;
 }
 
@@ -43,6 +45,15 @@ export const uiTest = base.extend<UiFixtures>({
       await loginPage.login(user);
       await productsPage.expectLoaded();
       return productsPage;
+    });
+  },
+
+  addToCart: async ({ productsPage, uiContext }, use) => {
+    await use(async (productNames) => {
+      const products = await productsPage.findProducts(productNames);
+      await productsPage.addToCart(...products);
+      uiContext.set('selectedProducts', products);
+      return products;
     });
   },
 

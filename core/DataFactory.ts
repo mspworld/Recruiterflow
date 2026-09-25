@@ -12,16 +12,4 @@ export const DataFactory = {
   lastName: (): string => pickOne(LAST_NAMES),
   jobTitle: (): string => pickOne(JOBS),
   postalCode: (): string => String(randomInt(10000, 99999)),
-
-  sample<T>(items: readonly T[], count: number): T[] {
-    if (count < 1 || count > items.length) {
-      throw new Error(`Cannot sample ${count} item(s) from a list of ${items.length}`);
-    }
-    const shuffled = [...items];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = randomInt(0, i);
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled.slice(0, count);
-  },
 };
