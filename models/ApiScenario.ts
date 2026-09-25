@@ -1,4 +1,4 @@
-import type { CreateUserRequest } from '../types/user.types';
+import type { CreateUserRequest } from '@api/types/user.types';
 import type { CreatedUser } from './CreatedUser';
 
 export interface ApiScenario {

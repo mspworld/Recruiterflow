@@ -1,6 +1,6 @@
 import { resilient } from '@core/locators';
 import { ProductList } from '../components/ProductList';
-import { pageTitles } from '../data/messages';
+import { pageTitles } from '../test-data/messages';
 import { SecurePage } from './SecurePage';
 
 export class CartPage extends SecurePage {

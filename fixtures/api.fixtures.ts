@@ -2,7 +2,7 @@ import { test as base } from '@playwright/test';
 import { attachJson } from '@core/evidence';
 import { ScenarioContext } from '@core/ScenarioContext';
 import { UsersClient } from '@api/clients/UsersClient';
-import type { ApiScenario } from '@api/models/ApiScenario';
+import type { ApiScenario } from '@models/ApiScenario';
 
 export interface ApiFixtures {
   usersClient: UsersClient;

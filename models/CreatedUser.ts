@@ -1,4 +1,4 @@
-import type { CreateUserResponse } from '../types/user.types';
+import type { CreateUserResponse } from '@api/types/user.types';
 
 export class CreatedUser {
   private _id = '';

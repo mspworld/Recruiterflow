@@ -1,5 +1,5 @@
 import { DataFactory } from '@core/DataFactory';
-import type { CreateUserRequest } from '../types/user.types';
+import type { CreateUserRequest } from '@api/types/user.types';
 
 export const userPayloads = {
   morpheus: { name: 'morpheus', job: 'leader' },

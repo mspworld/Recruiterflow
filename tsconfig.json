@@ -11,25 +11,40 @@
     "resolveJsonModule": true,
     "paths": {
       "@config/*": [
-        "./src/config/*"
+        "./config/*"
       ],
       "@core/*": [
-        "./src/core/*"
+        "./core/*"
       ],
-      "@ui/*": [
-        "./src/ui/*"
+      "@pages/*": [
+        "./pages/*"
+      ],
+      "@components/*": [
+        "./components/*"
+      ],
+      "@models/*": [
+        "./models/*"
+      ],
+      "@data/*": [
+        "./test-data/*"
       ],
       "@api/*": [
-        "./src/api/*"
+        "./api/*"
+      ],
+      "@utils/*": [
+        "./utils/*"
       ],
       "@fixtures": [
-        "./src/fixtures/index.ts"
+        "./fixtures/index.ts"
       ]
     }
   },
   "include": [
-    "src/**/*.ts",
-    "tests/**/*.ts",
-    "playwright.config.ts"
+    "**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "playwright-report",
+    "test-results"
   ]
 }

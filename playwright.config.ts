@@ -1,5 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
-import { config } from './src/config/GlobalConfig';
+import { config } from './config/GlobalConfig';
 
 export default defineConfig({
   testDir: './tests',

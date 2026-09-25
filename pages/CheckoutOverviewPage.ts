@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
 import { resilient } from '@core/locators';
 import { ProductList } from '../components/ProductList';
-import { pageTitles } from '../data/messages';
+import { pageTitles } from '../test-data/messages';
 import { parsePrice } from '../utils/price';
 import { SecurePage } from './SecurePage';
 

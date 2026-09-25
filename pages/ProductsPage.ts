@@ -2,12 +2,12 @@ import { expect } from '@playwright/test';
 import { DataFactory } from '@core/DataFactory';
 import { resilient } from '@core/locators';
 import { ProductList } from '../components/ProductList';
-import { pageTitles } from '../data/messages';
-import { sortCases, type SortOption } from '../data/sortOptions';
+import { pageTitles } from '../test-data/messages';
+import { sortCases, type SortOption } from '../test-data/sortOptions';
 import type { Product } from '../models/Product';
 import { SecurePage } from './SecurePage';
 
-export class InventoryPage extends SecurePage {
+export class ProductsPage extends SecurePage {
   protected override readonly path = '/inventory.html';
   protected override readonly expectedTitle = pageTitles.products;
   readonly products = new ProductList(this.page);

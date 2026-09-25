@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 import { resilient } from '@core/locators';
-import { pageTitles } from '../data/messages';
+import { pageTitles } from '../test-data/messages';
 import { SecurePage } from './SecurePage';
 
 export class CheckoutCompletePage extends SecurePage {

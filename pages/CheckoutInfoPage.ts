@@ -1,5 +1,5 @@
 import { resilient } from '@core/locators';
-import { pageTitles } from '../data/messages';
+import { pageTitles } from '../test-data/messages';
 import type { Customer } from '../models/Customer';
 import { SecurePage } from './SecurePage';
 

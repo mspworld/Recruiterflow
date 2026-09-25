@@ -1,15 +1,15 @@
 import { test } from '@fixtures';
 import { And, Given, Then, When } from '@core/bdd';
-import { PRODUCTS_TO_ADD } from '@ui/data/checkout';
-import { messages } from '@ui/data/messages';
-import { users } from '@ui/data/users';
-import { Customer } from '@ui/models/Customer';
-import { sumPrices } from '@ui/utils/price';
+import { PRODUCTS_TO_ADD } from '@data/checkout';
+import { messages } from '@data/messages';
+import { users } from '@data/users';
+import { Customer } from '@models/Customer';
+import { sumPrices } from '@utils/price';
 
 test.describe('Checkout', () => {
   test('user completes checkout and sees the order confirmation', async ({
     loginAs,
-    inventoryPage,
+    productsPage,
     cartPage,
     checkoutInfoPage,
     checkoutOverviewPage,
@@ -19,13 +19,13 @@ test.describe('Checkout', () => {
     await Given('I am logged in as the standard user', () => loginAs(users.standard));
 
     await And(`I have ${PRODUCTS_TO_ADD} products in my cart`, async () => {
-      const products = await inventoryPage.pickRandomProducts(PRODUCTS_TO_ADD);
-      await inventoryPage.addToCart(...products);
+      const products = await productsPage.pickRandomProducts(PRODUCTS_TO_ADD);
+      await productsPage.addToCart(...products);
       uiContext.set('selectedProducts', products);
     });
 
     await When('I open the cart', async () => {
-      await inventoryPage.header.openCart();
+      await productsPage.header.openCart();
       await cartPage.expectLoaded();
     });
 

@@ -1,13 +1,13 @@
 import { test } from '@fixtures';
 import { And, Given, Then, When } from '@core/bdd';
-import { messages } from '@ui/data/messages';
-import { users } from '@ui/data/users';
+import { messages } from '@data/messages';
+import { users } from '@data/users';
 
 test.describe('Login', () => {
-  test('standard user logs in and lands on the products page', async ({ loginPage, inventoryPage }) => {
+  test('standard user logs in and lands on the products page', async ({ loginPage, productsPage }) => {
     await Given('I am on the login page', () => loginPage.open());
     await When('I log in as the standard user', () => loginPage.login(users.standard));
-    await Then('I land on the products page', () => inventoryPage.expectLoaded());
+    await Then('I land on the products page', () => productsPage.expectLoaded());
   });
 
   test('locked-out user sees an error and is not logged in', async ({ loginPage }) => {

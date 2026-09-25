@@ -1,8 +1,8 @@
 import { expect, test } from '@fixtures';
 import { And, Given, Then, When } from '@core/bdd';
 import { expectCreatedUser, expectUserShape } from '@api/assertions/userAssertions';
-import { buildUserPayload, LIST_PAGE, userPayloads } from '@api/data/userPayloads';
-import { CreatedUser } from '@api/models/CreatedUser';
+import { buildUserPayload, LIST_PAGE, userPayloads } from '@data/userPayloads';
+import { CreatedUser } from '@models/CreatedUser';
 
 test.describe('Users API', () => {
   test(`GET /api/users?page=${LIST_PAGE} returns users with the required fields`, async ({ usersClient }) => {
