@@ -1,165 +1,162 @@
 # Recruiterflow QA Assignment
 
-Playwright + TypeScript tests for the saucedemo.com shop (UI) and the reqres.in users API.
+![Playwright](https://img.shields.io/badge/Playwright-1.63-2EAD33?logo=playwright&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)
+![Node](https://img.shields.io/badge/Node.js-%E2%89%A518-339933?logo=node.js&logoColor=white)
 
-## How to run
+UI and API test automation built with **Playwright + TypeScript**.
 
-You need Node.js 18 or newer.
+- **UI:** [saucedemo.com](https://www.saucedemo.com): login, cart, checkout and sorting
+- **API:** [reqres.in](https://reqres.in): list users, create user, create-then-verify
+
+## Getting started
+
+**Prerequisite:** Node.js 18 or newer.
 
 ```bash
+git clone https://github.com/mspworld/Recruiterflow.git
+cd Recruiterflow
 npm install
 npx playwright test
 ```
 
-`npm install` also downloads Chromium, so nothing else needs to be set up.
+`npm install` also downloads Chromium. No `.env` file is needed.
 
-Other useful commands:
-
-| Command | What it does |
+| Command | Description |
 |---|---|
-| `npm run test:ui` | Only the UI tests |
-| `npm run test:api` | Only the API tests |
-| `npm run test:watch` | Opens the browser and runs the UI tests slowly, one by one, so you can watch |
-| `npm run test:evidence` | Records a screenshot and video of every UI test |
-| `npm run report` | Opens the HTML report from the last run |
+| `npx playwright test` | Run all tests (UI + API) |
+| `npm run test:ui` | Run UI tests only |
+| `npm run test:api` | Run API tests only |
+| `npm run test:watch` | Run UI tests in a visible browser, one at a time, slowed down |
+| `npm run test:evidence` | Run with a screenshot and video for every UI test |
+| `npm run report` | Open the HTML report of the last run |
 
-## What is in each folder
+## Framework architecture
+
+```mermaid
+flowchart TD
+    T["<b>Tests</b><br/>tests/ui · tests/api<br/>Given / When / Then steps"]
+    F["<b>Fixtures</b><br/>inject page objects, API client,<br/>loginAs, addToCart, scenario data"]
+    P["<b>Page Objects + Components</b><br/>locators and actions per page"]
+    A["<b>API Client</b><br/>UsersClient → BaseApiClient"]
+    D["<b>Test Data + Models</b><br/>users, products, payloads,<br/>Product, Customer, CreatedUser"]
+    C["<b>GlobalConfig</b><br/>URLs, API key, environment, evidence"]
+    PW["Playwright page"]
+    RQ["Playwright request"]
+
+    T --> F
+    F --> P --> PW
+    F --> A --> RQ
+    D -.-> T
+    C -.-> PW
+    C -.-> RQ
+```
+
+| Layer | Responsibility |
+|---|---|
+| **Tests** | Describe the behaviour being checked, written as `Given / When / Then` steps. No locators or URLs. |
+| **Fixtures** | Give each test ready-made page objects and the API client. `loginAs(user)` and `addToCart(names)` handle the repeated setup. |
+| **Page Objects** | One class per page, holding its locators and actions. `BasePage` checks the URL. `SecurePage` adds the header and page-title check for pages behind login. |
+| **Components** | Parts shared across pages: `Header` (cart badge and link) and `ProductList` (product rows used on the products, cart and overview pages). |
+| **API Client** | `BaseApiClient` sends requests, parses JSON, retries network or 5xx errors, and attaches each request and response to the report. `UsersClient` has one method per endpoint. |
+| **Test Data + Models** | Test data is kept out of the tests. Models are small classes with getters and setters, passed between steps through `ScenarioContext` (`set` / `get`). |
+| **GlobalConfig** | The single place settings are read, with a default for every value. |
+
+## Framework structure
 
 ```
-tests/
-  ui/             login, cart, checkout and sorting tests
-  api/            users API tests
-pages/            one class per saucedemo page
-components/       parts that appear on several pages (header, product list)
-fixtures/         gives each test the pages and helpers it needs
-api/              API client, endpoints, response types, reusable API checks
-models/           small data classes (Product, Customer, CreatedUser, ...)
-test-data/        users, product names, expected messages, API payloads
-config/           GlobalConfig: URLs, API key, evidence mode, environment
-core/             small helpers: BDD steps, scenario data, retry, error messages
-utils/            price helpers
+Recruiterflow/
+├── tests/
+│   ├── ui/
+│   │   ├── login.spec.ts           # scenarios 1, 2
+│   │   ├── cart.spec.ts            # scenario 3
+│   │   ├── checkout.spec.ts        # scenario 4
+│   │   └── sorting.spec.ts         # scenario 5
+│   └── api/
+│       └── users.spec.ts           # scenarios 6, 7, 8
+├── fixtures/
+│   ├── ui.fixtures.ts              # page objects, loginAs, addToCart, uiContext
+│   ├── api.fixtures.ts             # usersClient, apiContext
+│   └── index.ts                    # merges UI + API fixtures into one `test`
+├── pages/
+│   ├── BasePage.ts                 # open(), expectLoaded() by URL
+│   ├── SecurePage.ts               # header + page title for logged-in pages
+│   ├── LoginPage.ts
+│   ├── ProductsPage.ts
+│   ├── CartPage.ts
+│   ├── CheckoutInfoPage.ts
+│   ├── CheckoutOverviewPage.ts
+│   └── CheckoutCompletePage.ts
+├── components/
+│   ├── Header.ts                   # cart badge and cart link
+│   └── ProductList.ts              # reads product names and prices
+├── api/
+│   ├── core/BaseApiClient.ts       # request, JSON parsing, retry, report attachment
+│   ├── clients/UsersClient.ts      # listUsers(), createUser()
+│   ├── endpoints.ts
+│   ├── types/user.types.ts         # request and response types
+│   └── assertions/userAssertions.ts
+├── models/                         # Product, Customer, CreatedUser, UserCredentials
+├── test-data/                      # users, products, messages, sort options, payloads
+├── config/
+│   ├── GlobalConfig.ts             # reads all settings
+│   └── environments.ts             # URL and credential profile per environment
+├── core/                           # BDD steps, ScenarioContext, retry, error wrapping
+├── utils/price.ts
+└── playwright.config.ts            # "ui" and "api" projects
 ```
 
-**tests/** only describe *what* is tested. They hold no locators and no URLs, so they read like the scenario in the brief.
+## Test scenarios
 
-**pages/** hold the locators and actions for each page.
-- `BasePage` knows how to open a page and check you are on it (by URL).
-- `SecurePage` is for pages after login. It adds the header (cart badge) and checks the page title.
-- `LoginPage`, `ProductsPage`, `CartPage` and the three checkout pages each hold only their own buttons and fields.
-
-**components/** avoid repeating code that appears on more than one page.
-- `Header` is the cart icon and badge, shown on every page after login.
-- `ProductList` reads product names and prices. The products page, cart and checkout overview all use the same product rows, so this is written once.
-
-**fixtures/** are the glue. A test just asks for `loginPage` or `cartPage` and gets a ready object. There are also two helpers:
-- `loginAs(user)` opens the login page, logs in and waits for the products page.
-- `addToCart(names)` adds products and remembers which ones were added.
-
-**api/** does for the API what `pages/` does for the UI.
-- `BaseApiClient` sends the request, reads the JSON and attaches the request and response to the report.
-- `UsersClient` has one method per endpoint.
-
-**config/GlobalConfig.ts** is the one place where settings are read. Every value has a default, so no `.env` file is needed.
-
-## How one test runs
-
-Take the checkout test "finishing the order shows the thank-you message":
-
-1. `beforeEach` runs first:
-   - `loginAs(users.standard)` logs in.
-   - `addToCart(cartProductNames)` adds the two products from `test-data/products.ts`, reads their prices from the page, and saves them with `uiContext.set('selectedProducts', ...)`.
-   - It then fills in a random customer and moves on to the overview page.
-2. The test then:
-   - clicks **Finish**
-   - checks the complete page loaded
-   - checks the header text is exactly "Thank you for your order!"
-3. Each step is written as `Given / When / Then`, so the HTML report shows the steps in plain English, and a failure points to the step that broke.
-
-The overview test in the same file reads `uiContext.get('selectedProducts')` to check that the item total equals the sum of those prices. That's how data passes from one step to the next.
-
-## How I approached each task
-
-| # | Task | What the test checks |
+| # | Scenario | Verified |
 |---|---|---|
-| 1 | Standard user logs in | After login, the URL is `/inventory.html` and the page title is "Products". |
-| 2 | Locked-out user | The error text matches exactly, **and** the user is still on the login page. Seeing an error alone doesn't prove they weren't logged in. |
-| 3 | Two products → badge shows 2 | Adds two products, and after each one waits for the button to change to "Remove". Then checks the badge text is `2`. |
-| 4 | Full checkout | Log in, add products and fill the customer details in `beforeEach`. The test itself only finishes the order and checks the thank-you message. |
-| 5 | Sort by price, low to high | Reads all prices after sorting and checks the first one equals the lowest. The lowest price is worked out from the page, not hard-coded, so the test doesn't break if prices change. |
-| 6 | `GET /api/users?page=2` | Status 200, `data` is a non-empty array, and every user has `id`, `email`, `first_name` and `last_name`. |
-| 7 | `POST /api/users` | Status 201, the response has the same name and job, `id` is not empty, and `createdAt` is a valid date close to when the request was sent. |
-| 8 | Bonus: create-then-verify | Step 1 builds a new payload and saves it. Step 2 creates the user and saves the response as a `CreatedUser`. Step 3 reads both back and compares them. The same pattern would work for a real API that stores data. |
+| 1 | Standard user logs in | URL is `/inventory.html` and the title is "Products" |
+| 2 | Locked-out user | Exact error message shown **and** user stays on the login page |
+| 3 | Add two products | Cart badge shows `2` |
+| 4 | Full checkout | Order finishes with "Thank you for your order!" |
+| 5 | Sort by price (low to high) | First product has the lowest listed price |
+| 6 | `GET /api/users?page=2` | Status 200, `data` array, each user has `id`, `email`, `first_name`, `last_name` |
+| 7 | `POST /api/users` | Status 201, name and job echoed back, `id` present, valid `createdAt` |
+| 8 | Create-then-verify (bonus) | Created user saved in one step, verified against the payload in the next |
 
-I also added a few small tests, each checking one thing:
+Also covered:
 - the cart page lists the added products
-- the overview total is correct
+- the checkout overview shows the correct item total
 - the cart is empty after the order
-- all four sort options give a correctly ordered list
+- all four sort options produce a correctly ordered list
 
-## Choices I made
+## Conventions
 
-**Locators.**
-- I use `getByTestId` for saucedemo's `data-test` attributes. `testIdAttribute` is set to `data-test` in the config.
-- I use `getByRole` for buttons, by their visible text (Login, Checkout, Continue, Finish, Add to cart).
-- There's no CSS or XPath.
+- **Locators:**
+  - `getByTestId` for saucedemo's `data-test` attributes
+  - `getByRole` for buttons
+  - no CSS or XPath
+- **Assertions:** Playwright's auto-waiting assertions, one behaviour per test. Expected values like the lowest price, item total and sort order are calculated from the page, not hard-coded.
+- **Independence:** every test logs in and sets up its own data, so tests run in parallel and in any order.
+- **Errors:** multi-step actions rethrow with the page and action name, for example `Could not add "Sauce Labs Backpack" to the cart on ProductsPage`.
 
-**Assertions.**
-- I use Playwright's waiting assertions (`toHaveText`, `toHaveURL`, `toBeHidden`), so tests wait for the page instead of using sleeps.
-- Each test checks one behaviour.
+## Reports and evidence
 
-**Independent tests.** Every test logs in and sets up its own cart, so tests can run in any order and in parallel.
+`npm run report` opens the Playwright HTML report. It shows each `Given / When / Then` step, the API requests and responses, and the data each test used.
 
-**Test data.**
-- Users, product names, messages and payloads live in `test-data/`, not inside tests.
-- Product names are fixed so runs are repeatable.
-- Prices are read from the page.
+| Mode | Screenshot | Video | Trace |
+|---|---|---|---|
+| `npx playwright test` | on failure | — | on failure |
+| `npm run test:evidence` | every test | every test | on failure |
 
-**Error messages.** Actions with several steps (login, add to cart, sort, checkout form) are wrapped in a try/catch that rethrows with the page and action name. For example: `Could not add "Sauce Labs Backpack" to the cart on ProductsPage`. The API client does the same when a response isn't JSON.
+## Configuration
 
-**Retries.**
-- Playwright retries a failed test once locally, twice on CI.
-- The API client retries network errors and 408/5xx responses up to 2 times.
-- A 429 (rate limit) is **not** retried, because reqres's limit is per day and retrying only uses up more requests. The test fails straight away with reqres's own message, including when the limit resets.
-- Any other status is returned as-is, so the test can check it.
+Everything is optional. Use environment variables, or copy `.env.example` to `.env`.
 
-**Evidence.**
-- A normal run keeps a screenshot and trace only when a test fails.
-- `npm run test:evidence` records a screenshot and video of every UI test.
-- API requests and responses, and the data each test used, are attached to the HTML report.
+| Variable | Default |
+|---|---|
+| `TEST_ENV` | `production` |
+| `UI_BASE_URL` | `https://www.saucedemo.com` |
+| `API_BASE_URL` | `https://reqres.in` |
+| `REQRES_API_KEY` | `reqres-free-v1` |
+| `SAUCE_PASSWORD` | `secret_sauce` |
+| `EVIDENCE` | `failure` (`off` / `failure` / `full`) |
+| `HEADED` / `SLOW_MO` | `false` / `0` |
+| `API_RETRIES` | `2` |
 
-## Settings
-
-All optional. Set them as environment variables, or copy `.env.example` to `.env`.
-
-| Setting | Default | Used for |
-|---|---|---|
-| `TEST_ENV` | `production` | Which profile in `config/environments.ts` to use |
-| `UI_BASE_URL` / `API_BASE_URL` | saucedemo / reqres | Point the tests at another site |
-| `REQRES_API_KEY` | `reqres-free-v1` | reqres API key, sent as the `x-api-key` header |
-| `SAUCE_PASSWORD` | `secret_sauce` | Password for the test users |
-| `EVIDENCE` | `failure` | `off`, `failure` or `full` |
-| `HEADED` / `SLOW_MO` | `false` / `0` | Show the browser and slow it down |
-| `API_RETRIES` | `2` | Retries for network errors and 5xx |
-
-To add another environment, add one entry to `config/environments.ts` and run with `TEST_ENV=<name>`.
-
-## Note on the reqres.in rate limit
-
-The brief describes reqres as having no rate limiting, but reqres now allows anonymous users **40 requests per day per IP address**. The limit resets at midnight UTC.
-
-One full run of this suite makes 3 API requests, so a normal review is well within the limit. If you do hit it, the API tests fail with a message like:
-
-> `POST /api/users was rate-limited (429): You've hit the anonymous demo limit of 40 requests/day from this IP. Resets in 14h 50m.`
-
-A free reqres account gives a personal API key with a higher limit. Put it in `.env` as `REQRES_API_KEY=...`, and no code changes are needed.
-
-## Trade-offs and next steps
-
-- **Every UI test logs in through the login page.** This is simple and keeps tests independent, but it's slower. With a bigger suite, I'd log in once in a setup project and reuse the saved session (`storageState`).
-- **Chromium only**, as the brief allows. Firefox or WebKit is one more entry in `playwright.config.ts`.
-- **With more time, I would add:**
-  - `problem_user` tests
-  - checkout form validation (empty fields)
-  - JSON-schema checks for API responses
-  - ESLint with the Playwright plugin to catch missing `await`s
-  - a CI job that publishes the report
+> **Note:** reqres.in allows anonymous users **40 requests per day per IP**, resetting at midnight UTC. One full run uses 3 requests. If the limit is reached, the API tests fail immediately with reqres's own message. A personal key from a free reqres account can be set as `REQRES_API_KEY`.
