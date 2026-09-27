@@ -28,8 +28,19 @@ npx playwright test
 | `npm run test:ui` | Run UI tests only |
 | `npm run test:api` | Run API tests only |
 | `npm run test:watch` | Run UI tests in a visible browser, one at a time, slowed down |
-| `npm run test:evidence` | Run with a screenshot and video for every UI test |
+| `npm run test:evidence` | Run everything and regenerate the [`evidence/`](evidence/README.md) folder |
 | `npm run report` | Open the HTML report of the last run |
+
+## Test evidence
+
+**[→ Open the recorded evidence](evidence/README.md)** to see what every test did without running anything.
+
+- **UI tests:** a preview GIF, the full video, a screenshot after every `Given / When / Then` step, and a Playwright trace that replays every click and keystroke.
+- **API tests:** every request and response.
+
+<img src="evidence/ui/checkout-finishing-the-order-shows-the-thank-you-for-your-order-messag/preview.gif" width="560" alt="Checkout test recording">
+
+To record it again yourself, run `npm run test:evidence`.
 
 ## Framework architecture
 
@@ -103,6 +114,8 @@ Recruiterflow/
 │   └── environments.ts             # URL and credential profile per environment
 ├── core/                           # BDD steps, ScenarioContext, retry, error wrapping
 ├── utils/price.ts
+├── reporters/EvidenceReporter.ts   # builds the evidence/ folder in evidence mode
+├── evidence/                       # recorded run: videos, step screenshots, traces, API calls
 └── playwright.config.ts            # "ui" and "api" projects
 ```
 
@@ -142,7 +155,7 @@ Also covered:
 | Mode | Screenshot | Video | Trace |
 |---|---|---|---|
 | `npx playwright test` | on failure | — | on failure |
-| `npm run test:evidence` | every test | every test | on failure |
+| `npm run test:evidence` | after every step | every test | every test (replays every action) |
 
 ## Configuration
 

@@ -1,10 +1,13 @@
 import { expect, type Page } from '@playwright/test';
+import { registerPage } from '@core/evidence';
 import { perform } from '@core/perform';
 
 export abstract class BasePage {
   abstract readonly path: string;
 
-  constructor(protected readonly page: Page) {}
+  constructor(protected readonly page: Page) {
+    registerPage(page);
+  }
 
   async open(): Promise<void> {
     await this.page.goto(this.path);

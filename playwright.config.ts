@@ -4,7 +4,7 @@ import { config } from './config/GlobalConfig';
 const evidenceSettings = {
   off: { screenshot: 'off', video: 'off', trace: 'off' },
   failure: { screenshot: 'only-on-failure', video: 'off', trace: 'retain-on-failure' },
-  full: { screenshot: 'on', video: 'on', trace: 'retain-on-failure' },
+  full: { screenshot: 'on', video: 'on', trace: 'on' },
 } as const;
 
 export default defineConfig({
@@ -15,7 +15,11 @@ export default defineConfig({
   workers: config.isCI ? 2 : undefined,
   timeout: 30_000,
   expect: { timeout: 7_000 },
-  reporter: [['list'], ['html', { open: 'never' }]],
+  reporter: [
+    ['list'],
+    ['html', { open: 'never' }],
+    ...(config.evidence === 'full' ? [['./reporters/EvidenceReporter.ts', { outputDir: 'evidence' }] as const] : []),
+  ],
 
   projects: [
     {
