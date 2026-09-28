@@ -187,4 +187,8 @@ Everything is optional. Use environment variables, or copy `.env.example` to `.e
 | `HEADED` / `SLOW_MO` | `false` / `0` |
 | `API_RETRIES` | `2` |
 
-> **Note:** reqres.in allows anonymous users **40 requests per day per IP**, resetting at midnight UTC. One full run uses 3 requests. If the limit is reached, the API tests fail immediately with reqres's own message. A personal key from a free reqres account can be set as `REQRES_API_KEY`.
+> **Note on reqres.in limits:**
+> - reqres allows **40 requests per day per IP address** (reset at midnight UTC) and **20 requests per minute**.
+> - One full run of this suite makes 3 API requests.
+> - If the daily limit is reached, reqres returns `429` and the API tests fail straight away with reqres's message, which includes when the limit resets.
+> - reqres's message says a free account gives a higher limit and a personal API key. The suite sends the value of `REQRES_API_KEY` as the `x-api-key` header.
