@@ -1,6 +1,7 @@
 export function parsePrice(text: string): number {
-  const price = Number(text.replace(/[^0-9.]/g, ''));
-  if (Number.isNaN(price)) throw new Error(`"${text}" is not a price`);
+  const digits = text.replace(/[^0-9.]/g, '');
+  const price = Number(digits);
+  if (!digits || Number.isNaN(price)) throw new Error(`"${text}" is not a price`);
   return price;
 }
 

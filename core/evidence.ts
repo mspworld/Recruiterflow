@@ -9,8 +9,13 @@ export function registerPage(page: Page): void {
 
 export async function captureStep(stepTitle: string): Promise<void> {
   if (config.evidence !== 'full' || !activePage || activePage.isClosed()) return;
-  const screenshot = await activePage.screenshot();
-  await test.info().attach(`step: ${stepTitle}`, { body: screenshot, contentType: 'image/png' });
+  try {
+    const screenshot = await activePage.screenshot();
+    await test.info().attach(`step: ${stepTitle}`, { body: screenshot, contentType: 'image/png' });
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    test.info().annotations.push({ type: 'evidence', description: `No screenshot for "${stepTitle}": ${reason}` });
+  }
 }
 
 export async function attachJson(testInfo: TestInfo, name: string, data: unknown): Promise<void> {

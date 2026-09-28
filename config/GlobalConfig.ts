@@ -3,7 +3,15 @@ import { environments, type EnvironmentName } from './environments';
 
 loadEnvFile({ quiet: true });
 
-export type EvidenceMode = 'off' | 'failure' | 'full';
+type EvidenceMode = 'off' | 'failure' | 'full';
+
+function readNumber(name: string, fallback: number): number {
+  const value = Number(process.env[name] || fallback);
+  if (!Number.isInteger(value) || value < 0) {
+    throw new Error(`${name} must be a whole number of 0 or more. Got "${process.env[name]}"`);
+  }
+  return value;
+}
 
 class GlobalConfig {
   readonly environment: EnvironmentName;
@@ -36,9 +44,9 @@ class GlobalConfig {
     }
     this.evidence = evidence as EvidenceMode;
 
-    this.headed = process.env.HEADED === 'true';
-    this.slowMo = Number(process.env.SLOW_MO || 0);
-    this.apiRetries = Number(process.env.API_RETRIES || 2);
+    this.headed = process.env.HEADED?.toLowerCase() === 'true';
+    this.slowMo = readNumber('SLOW_MO', 0);
+    this.apiRetries = readNumber('API_RETRIES', 2);
     this.isCI = Boolean(process.env.CI);
   }
 }

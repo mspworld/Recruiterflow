@@ -9,14 +9,12 @@
     "test:ui": "playwright test --project=ui",
     "test:api": "playwright test --project=api",
     "test:evidence": "cross-env EVIDENCE=full playwright test",
-    "test:headed": "cross-env HEADED=true playwright test --project=ui",
     "test:watch": "cross-env HEADED=true SLOW_MO=600 playwright test --project=ui --workers=1",
-    "test:debug": "playwright test --debug",
     "report": "playwright show-report",
     "typecheck": "tsc --noEmit"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

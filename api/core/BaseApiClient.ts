@@ -23,18 +23,24 @@ export abstract class BaseApiClient {
   }
 
   private async send<T>(method: string, path: string, options: RequestOptions): Promise<ApiResponse<T>> {
-    const response = await withRetry(
-      () => this.fetchOnce(method, path, options),
-      config.apiRetries,
-      (error) => error instanceof ApiError && error.retryable,
-    );
-
-    const result = { status: response.status(), body: await this.readJson<T>(response, method, path) };
-
-    if (this.testInfo) {
-      await attachJson(this.testInfo, `${method} ${path}`, { request: { method, path, ...options }, response: result });
+    let outcome: unknown;
+    try {
+      const response = await withRetry(
+        () => this.fetchOnce(method, path, options),
+        config.apiRetries,
+        (error) => error instanceof ApiError && error.retryable,
+      );
+      const result = { status: response.status(), body: await this.readJson<T>(response, method, path) };
+      outcome = result;
+      return result;
+    } catch (error) {
+      outcome = { error: error instanceof Error ? error.message : String(error) };
+      throw error;
+    } finally {
+      if (this.testInfo) {
+        await attachJson(this.testInfo, `${method} ${path}`, { request: { method, path, ...options }, response: outcome });
+      }
     }
-    return result;
   }
 
   private async fetchOnce(method: string, path: string, options: RequestOptions): Promise<APIResponse> {
@@ -68,7 +74,9 @@ export abstract class BaseApiClient {
 
   private async readJson<T>(response: APIResponse, method: string, path: string): Promise<T> {
     const text = await response.text();
-    if (!text) return undefined as T;
+    if (!text) {
+      throw new ApiError(`${method} ${path} returned an empty body (status ${response.status()})`);
+    }
 
     try {
       return JSON.parse(text) as T;

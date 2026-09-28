@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import type { FullResult, Reporter, TestCase, TestResult, TestStep } from '@playwright/test/reporter';
+import type { FullConfig, FullResult, Reporter, Suite, TestCase, TestResult, TestStep } from '@playwright/test/reporter';
 
 interface Options {
   outputDir?: string;
@@ -14,7 +14,7 @@ interface StepShot {
 
 interface ApiCall {
   title: string;
-  status: number;
+  status: number | string;
   file: string;
   json: string;
 }
@@ -40,7 +40,8 @@ const slugify = (text: string): string =>
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
-    .slice(0, 70);
+    .slice(0, 60)
+    .replace(/-$/, '');
 
 const hasFfmpeg = (): boolean => spawnSync('ffmpeg', ['-version'], { stdio: 'ignore' }).status === 0;
 
@@ -57,8 +58,11 @@ class EvidenceReporter implements Reporter {
     this.outputDir = options.outputDir ?? 'evidence';
   }
 
-  onBegin(): void {
-    fs.rmSync(this.outputDir, { recursive: true, force: true });
+  onBegin(_config: FullConfig, suite: Suite): void {
+    for (const projectSuite of suite.suites) {
+      const project = projectSuite.project()?.name;
+      if (project) fs.rmSync(path.join(this.outputDir, project), { recursive: true, force: true });
+    }
     fs.mkdirSync(this.outputDir, { recursive: true });
   }
 
@@ -67,7 +71,7 @@ class EvidenceReporter implements Reporter {
 
     const project = test.parent.project()?.name ?? 'other';
     const title = test.titlePath().slice(-2).join(' › ');
-    const folder = path.join(project, slugify(title));
+    const folder = path.join(project, `${slugify(title)}-${test.id.slice(0, 6)}`);
     const absoluteFolder = path.join(this.outputDir, folder);
     fs.rmSync(absoluteFolder, { recursive: true, force: true });
     fs.mkdirSync(absoluteFolder, { recursive: true });
@@ -106,7 +110,7 @@ class EvidenceReporter implements Reporter {
       } else if (attachment.contentType === 'application/json' && attachment.body && attachment.name !== 'scenario-data') {
         const json = attachment.body.toString();
         const number = String(entry.apiCalls.length + 1).padStart(2, '0');
-        const status = JSON.parse(json).response?.status ?? 0;
+        const status = JSON.parse(json).response?.status ?? 'error';
         entry.apiCalls.push({ title: attachment.name, status, json, file: save(`${number}-${slugify(attachment.name)}.json`) });
       }
     }

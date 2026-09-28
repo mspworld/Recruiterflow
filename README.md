@@ -2,7 +2,7 @@
 
 ![Playwright](https://img.shields.io/badge/Playwright-1.63-2EAD33?logo=playwright&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)
-![Node](https://img.shields.io/badge/Node.js-%E2%89%A518-339933?logo=node.js&logoColor=white)
+![Node](https://img.shields.io/badge/Node.js-%E2%89%A520-339933?logo=node.js&logoColor=white)
 
 UI and API test automation built with **Playwright + TypeScript**.
 
@@ -11,7 +11,7 @@ UI and API test automation built with **Playwright + TypeScript**.
 
 ## Getting started
 
-**Prerequisite:** Node.js 18 or newer.
+**Prerequisite:** Node.js 20 or newer.
 
 ```bash
 git clone https://github.com/mspworld/Recruiterflow.git
@@ -30,6 +30,7 @@ npx playwright test
 | `npm run test:watch` | Run UI tests in a visible browser, one at a time, slowed down |
 | `npm run test:evidence` | Run all tests with recording on and save the results to `evidence/` |
 | `npm run report` | Open the HTML report of the last run |
+| `npm run typecheck` | Check the TypeScript types |
 
 ## Framework architecture
 
