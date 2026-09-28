@@ -28,19 +28,8 @@ npx playwright test
 | `npm run test:ui` | Run UI tests only |
 | `npm run test:api` | Run API tests only |
 | `npm run test:watch` | Run UI tests in a visible browser, one at a time, slowed down |
-| `npm run test:evidence` | Run everything and regenerate the [`evidence/`](evidence/README.md) folder |
+| `npm run test:evidence` | Run all tests with recording on and save the results to `evidence/` |
 | `npm run report` | Open the HTML report of the last run |
-
-## Test evidence
-
-**[→ Open the recorded evidence](evidence/README.md)** to see what every test did without running anything.
-
-- **UI tests:** a preview GIF, the full video, a screenshot after every `Given / When / Then` step, and a Playwright trace that replays every click and keystroke.
-- **API tests:** every request and response.
-
-<img src="evidence/ui/checkout-finishing-the-order-shows-the-thank-you-for-your-order-messag/preview.gif" width="560" alt="Checkout test recording">
-
-To record it again yourself, run `npm run test:evidence`.
 
 ## Framework architecture
 
@@ -150,12 +139,37 @@ Also covered:
 
 ## Reports and evidence
 
-`npm run report` opens the Playwright HTML report. It shows each `Given / When / Then` step, the API requests and responses, and the data each test used.
+### HTML report
 
-| Mode | Screenshot | Video | Trace |
-|---|---|---|---|
-| `npx playwright test` | on failure | — | on failure |
-| `npm run test:evidence` | after every step | every test | every test (replays every action) |
+```bash
+npx playwright test
+npm run report
+```
+
+The report shows each `Given / When / Then` step, the API requests and responses, and the data each test used. On a normal run, a screenshot and trace are saved only for failed tests.
+
+### Recorded evidence
+
+```bash
+npm run test:evidence
+```
+
+This runs all tests with recording on and saves the results to `evidence/`, one folder per test:
+
+| Test type | Saved per test |
+|---|---|
+| UI | `video.webm`, `preview.gif`, a screenshot after each step (`01-given-....png`, `02-when-....png`, ...), `trace.zip` |
+| API | the request and response of each call (`.json`) |
+
+[`evidence/README.md`](evidence/README.md) lists every test with its result, steps and files. The `evidence/` folder in this repo is from the last recorded run (15 of 15 passed).
+
+To open a trace:
+
+```bash
+npx playwright show-trace evidence/ui/<test-folder>/trace.zip
+```
+
+`preview.gif` is created only if `ffmpeg` is installed. Everything else needs no extra setup.
 
 ## Configuration
 
