@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { FullConfig, FullResult, Reporter, Suite, TestCase, TestResult, TestStep } from '@playwright/test/reporter';
@@ -71,7 +72,8 @@ class EvidenceReporter implements Reporter {
 
     const project = test.parent.project()?.name ?? 'other';
     const title = test.titlePath().slice(-2).join(' › ');
-    const folder = path.join(project, `${slugify(title)}-${test.id.slice(0, 6)}`);
+    const shortId = createHash('sha1').update(test.id).digest('hex').slice(0, 6);
+    const folder = path.join(project, `${slugify(title)}-${shortId}`);
     const absoluteFolder = path.join(this.outputDir, folder);
     fs.rmSync(absoluteFolder, { recursive: true, force: true });
     fs.mkdirSync(absoluteFolder, { recursive: true });
